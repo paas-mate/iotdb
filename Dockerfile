@@ -1,15 +1,15 @@
-FROM ttbb/base:jdk17
+FROM shoothzj/compile:jdk17-mvn AS compiler
 
-ENV IOTDB_HOME /opt/sh/iotdb
+RUN git clone --depth 1 https://github.com/apache/iotdb.git && \
+    cd iotdb && \
+    mvn -B clean package -DskipTests=true && \
+    cd distribution/target && \
+    unzip apache-iotdb-1.3.0-SNAPSHOT-all-bin.zip 
 
-ARG version=0.13.1
-ARG download=0.13.1-all-bin
+FROM shoothzj/base:jdk17
 
-RUN wget https://downloads.apache.org/iotdb/$version/apache-iotdb-$download.zip && \
-unzip apache-iotdb-$download.zip && \
-mv apache-iotdb-$download iotdb && \
-rm -rf /opt/sh/iotdb/sbin/*.bat && \
-rm -rf apache-iotdb-$download.zip && \
-echo "end"
+ENV IOTDB_HOME /opt/iotdb
 
-WORKDIR /opt/sh/iotdb
+COPY --from=compiler /iotdb/distribution/target /opt/iotdb
+
+WORKDIR /opt/iotdb
